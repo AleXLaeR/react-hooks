@@ -1,6 +1,21 @@
 import { useMemo, useState } from 'react';
 
-export default function useClientPagination<Data>(data: Data[], limit: number = 10) {
+type HandlerActions = 'getBatch' | 'next' | 'prev';
+
+type PaginationHandlers = {
+  [K in HandlerActions]: () => void;
+};
+
+interface UseClientPagination {
+  curPage: number;
+  pageCount: number;
+  handlers: PaginationHandlers & { goTo: (pageNum: number) => void };
+}
+
+export default function useClientPagination<Data>(
+  data: NonNullable<Data>[],
+  limit: number = 10,
+): UseClientPagination {
   const [curPage, setCurPage] = useState(1);
   const pageCount = Math.ceil(data.length / limit);
 

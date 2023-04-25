@@ -7,7 +7,7 @@ export default function useMediaQuery(
   direction: MediaDirection = 'min-width',
   value: SafeNumber,
   unit = 'px',
-) {
+): boolean {
   const [matchesQuery, setMatchesQuery] = useState(false);
 
   useEffect(() => {

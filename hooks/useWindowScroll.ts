@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import useDebounce from '../useDebounce';
+import { useCallback, useEffect, useState } from 'react';
+import useDebounce from './useDebounce';
 
 type WindowScrolls = {
   scrollX: number;
@@ -10,21 +10,16 @@ function getCurrentScroll(): WindowScrolls {
   return { scrollX: window.scrollX, scrollY: window.scrollY };
 }
 
-export default function useWindowScroll(debounceInterval?: number) {
+export default function useWindowScroll(debounceInterval?: number): WindowScrolls {
   const [windowScroll, setWindowScroll] = useState(getCurrentScroll());
   const debouncedWindowScroll = useDebounce(windowScroll, debounceInterval);
 
+  const handleResize = useCallback(() => setWindowScroll(getCurrentScroll()), []);
+
   useEffect(() => {
-    function handleResize() {
-      setWindowScroll(getCurrentScroll());
-    }
-
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
 
   return debouncedWindowScroll;
 }

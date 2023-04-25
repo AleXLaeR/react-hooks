@@ -1,23 +1,27 @@
 import { useCallback, useState } from 'react';
-import cookies from 'js-cookie';
+import { get, set, remove, CookieAttributes } from 'js-cookie';
 
-export default function useCookie(
-  cookieName: string
-): [string | null, (newValue: string, options?: cookies.CookieAttributes) => void, () => void] {
+type UseCookieReturnType = [
+  string | null,
+  (newValue: string, options?: CookieAttributes) => void,
+  () => void,
+];
+
+export default function useCookie(cookieName: string): UseCookieReturnType {
   const [value, setValue] = useState<string | null>(
-    () => cookies.get(cookieName) ?? null
+    () => get(cookieName) ?? null,
   );
 
   const updateCookie = useCallback(
-    (newValue: string, options?: cookies.CookieAttributes) => {
-      cookies.set(cookieName, newValue, options);
+    (newValue: string, options?: CookieAttributes) => {
+      set(cookieName, newValue, options);
       setValue(newValue);
     },
     [cookieName],
   );
 
   const deleteCookie = useCallback(() => {
-    cookies.remove(cookieName);
+    remove(cookieName);
     setValue(null);
   }, [cookieName]);
 

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import useDebounce from '../useDebounce';
+import { useCallback, useEffect, useState } from 'react';
+import useDebounce from './useDebounce';
 
 type WindowMeasurements = {
   width: number;
@@ -14,17 +14,12 @@ export default function useWindowSize(debounceInterval?: number) {
   const [windowSize, setWindowSize] = useState(getCurrentMeasurements());
   const debouncedWindowSize = useDebounce(windowSize, debounceInterval);
 
+  const handleResize = useCallback(() => setWindowSize(getCurrentMeasurements()), []);
+
   useEffect(() => {
-    function handleResize() {
-      setWindowSize(getCurrentMeasurements());
-    }
-
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
 
   return debouncedWindowSize;
 }

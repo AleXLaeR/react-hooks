@@ -1,18 +1,24 @@
 import { DependencyList, useCallback, useEffect, useState } from 'react';
 
-type UseAsyncState<T> = {
+type AfterAsyncCallback = (data?: any) => void;
+type MaybeAsyncFunc<T> = (...args: any[]) => Promise<T> | T;
+
+type PromiseCallbackState = {
+  onResolve?: AfterAsyncCallback;
+  onReject?: AfterAsyncCallback;
+};
+
+interface UseAsyncState<T> {
   loading: boolean;
   error?: any;
   value: T | null;
-  execute: (...args: any[]) => Promise<T>;
-};
-
-type AsyncFunc<T> = (...args: any[]) => Promise<T>;
+  execute: MaybeAsyncFunc<T>;
+}
 
 function useAsyncInternal<T>(
-  func: AsyncFunc<T>,
+  func: MaybeAsyncFunc<T>,
   deps: DependencyList = [],
-  initialLoading = true
+  initialLoading = true,
 ): UseAsyncState<T> {
   const [loading, setLoading] = useState(initialLoading);
   const [error, setError] = useState<any>();
@@ -43,17 +49,29 @@ function useAsyncInternal<T>(
   return { loading, error, value, execute };
 }
 
-function useAsync<T>(func: AsyncFunc<T>, deps: DependencyList = [], cb?: () => void) {
+function isPromise<T>(value: any): value is Promise<T> {
+  return value instanceof Promise;
+}
+
+function useAsync<T>(
+  func: MaybeAsyncFunc<T>,
+  deps: DependencyList = [],
+  { onResolve, onReject }: PromiseCallbackState = {},
+): Omit<UseAsyncState<T>, 'execute'> {
   const { execute, ...state } = useAsyncInternal(func, deps);
 
   useEffect(() => {
-    execute().then(cb);
-  }, [cb, execute]);
+    const result = execute();
+
+    if (isPromise(result) && (onResolve || onReject)) {
+      result.then(onResolve).catch(onReject);
+    }
+  }, [execute, onResolve, onReject]);
 
   return state;
 }
 
-function useAsyncFn<T>(func: AsyncFunc<T>, deps: DependencyList = []) {
+function useAsyncFn<T>(func: MaybeAsyncFunc<T>, deps: DependencyList = []): UseAsyncState<T> {
   return useAsyncInternal(
     func,
     deps,

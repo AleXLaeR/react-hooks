@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 
-export default function useFirstMount(callback?: () => void) {
+export default function useFirstMount(callback?: () => void): boolean {
   const isFirst = useRef(true);
 
   if (isFirst.current) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 type Timeout = ReturnType<typeof setTimeout>;
 type CallbackFunc = (...args: any[]) => void;
@@ -7,16 +7,18 @@ type Options = {
   leading?: boolean;
 };
 
+type CallbackReturnType<T extends CallbackFunc> = (...args: Parameters<T>) => void;
+
 export default function useDebouncedCallback<Cb extends CallbackFunc>(
-callback: T,
-intervalMs: number = 500,
-{ leading = false }: Options,
-) {
-  const latestCallback = useRef<T>(callback);
+  callback: Cb,
+  intervalMs: number = 500,
+  { leading = false }: Options,
+): CallbackReturnType<Cb> {
+  const latestCallback = useRef(callback);
   const [timerId, setTimerId] = useState<Timeout | null>(null);
 
   const debouncedCallback = useCallback(
-    (...args: Parameters<T>) => {
+    (...args: Parameters<Cb>) => {
       if (timerId) {
         clearTimeout(timerId);
       }
@@ -28,11 +30,11 @@ intervalMs: number = 500,
         if (!leading) {
           latestCallback.current(...args);
         }
-      }, delay);
+      }, intervalMs);
 
       setTimerId(newTimerId);
     },
-    [delay, options, timerId],
+    [intervalMs, timerId],
   );
 
   useEffect(() => () => {

@@ -1,21 +1,20 @@
-import useEffectOnce from './onFirst/useEffectOnce';
-import useUpdateEffect from './onFirst/useUpdateEffect';
+import useEffectOnce from './useEffectOnce';
+import useUpdateEffect from './useUpdateEffect';
 
 type LoggerFunc = (...args: any[]) => void;
+type LoggerArgs = Parameters<LoggerFunc>;
 
 export default function useLogger<T extends string>(
   keyName: NonNullable<T>,
-  logger: LoggerFunc,
-  ...rest: any[]
+  logger: LoggerFunc = console.log,
+  ...rest: LoggerArgs[]
 ) {
-  const logMethod = logger ?? console.log;
-
   useEffectOnce(() => {
-    logMethod(`${keyName} mounted`, ...rest);
-    return () => logMethod(`${keyName} unmounted`);
+    logger(`${keyName} mounted`, ...rest);
+    return () => logger(`${keyName} unmounted`);
   });
 
   useUpdateEffect(() => {
-    logMethod(`${keyName} updated`, ...rest);
-  });
-};
+    logger(`${keyName} updated`, ...rest);
+  }, [logger, keyName, rest]);
+}

@@ -1,33 +1,36 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 type NullableNumber = number | null;
+type Interval = ReturnType<typeof setInterval>;
+
+type UseTimerReturnType = [NullableNumber, Dispatch<SetStateAction<NullableNumber>>, () => void];
 
 const SECOND_DELAY = 1e3;
 
 export default function useTimer(
   callback: () => void,
   startTime: NullableNumber = null,
-): [NullableNumber, Dispatch<SetStateAction<NullableNumber>>, () => void] {
+): UseTimerReturnType {
   const [timeLeft, setTimeLeft] = useState<NullableNumber>(startTime);
+  const intervalRef = useRef<Interval>();
 
   useEffect(() => {
     if (!timeLeft) return;
+
     if (timeLeft === 0) {
       setTimeLeft(null);
       if (callback) callback();
       return;
     }
 
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => prev! - 1);
     }, SECOND_DELAY);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(intervalRef.current);
   }, [timeLeft, callback]);
 
-  function stopTimer() {
-    setTimeLeft(null);
-  }
+  const stopTimer = () => setTimeLeft(null);
 
   return [timeLeft, setTimeLeft, stopTimer];
 }

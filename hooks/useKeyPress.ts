@@ -3,11 +3,11 @@ import { useState, useEffect, useCallback } from 'react';
 export default function useKeyPress(
   targetKeys: string | string[],
   onKeyPress?: () => void,
-  target: EventTarget | null = window,
+  target: EventTarget = window,
 ): boolean {
   const [keyPressed, setKeyPressed] = useState(false);
 
-  const includesKey = (key: string): boolean => {
+  function includesKey(key: string): boolean {
     return Array.isArray(targetKeys) ? targetKeys.includes(key) : targetKeys === key;
   }
 
@@ -19,7 +19,7 @@ export default function useKeyPress(
       }
     },
     [onKeyPress, targetKeys],
-  );
+  ) as EventListenerOrEventListenerObject;
 
   const upHandler = useCallback(
     ({ key }: KeyboardEvent) => {
@@ -28,7 +28,7 @@ export default function useKeyPress(
       }
     },
     [targetKeys],
-  );
+  ) as EventListenerOrEventListenerObject;
 
   useEffect(() => {
     target.addEventListener('keydown', downHandler);

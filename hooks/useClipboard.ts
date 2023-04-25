@@ -4,43 +4,45 @@ type ClipboardData = {
   text?: string;
   image?: Blob;
 };
-
 type Copied = boolean;
-type UseClipBoardReturnType = {
-  copy: (data: ClipboardData) => Promise<Copied>;
-  isCopied: Copied;
-};
 
-export default function useClipboard(delayMs: number = 1e3): UseClipBoardReturnType {
+interface UseClipboardReturnType {
+  copy: (data: ClipboardData) => Promise<Copied>;
+  isAvailable: boolean;
+  isCopied: Copied;
+}
+
+export default function useClipboard(copyDelayMs: number = 0): UseClipboardReturnType {
   const [isCopied, setIsCopied] = useState(false);
+  const isAvailable = !!navigator.clipboard;
 
   useEffect(() => {
-    if (isCopied) {
-      const timeout = setTimeout(() => setIsCopied(false), delayMs);
+    if (isCopied && copyDelayMs > 0) {
+      const timeout = setTimeout(() => setIsCopied(false), copyDelayMs);
       return () => clearTimeout(timeout);
     }
-  }, [isCopied]);
+  }, [isCopied, copyDelayMs]);
 
   const copy = useCallback(async ({ text, image }: ClipboardData) => {
     try {
-      if (navigator.clipboard) {
-        if (text) {
-          await navigator.clipboard.writeText(text);
-        } else if (image) {
-          await navigator.clipboard.write([
-            new ClipboardItem({ [image.type]: image }),
-          ]);
-        }
-        setIsCopied(true);
-        return true;
+      if (!isAvailable) return false;
+
+      if (text) {
+        await navigator.clipboard.writeText(text);
+      } else if (image) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ [image.type]: image }),
+        ]);
       }
-      alert('Clipboard API not available');
+
+      setIsCopied(true);
+      return true;
+
     } catch (error: any) {
       console.error(error);
+      return false;
     }
-
-    return false;
   }, []);
 
-  return { copy, isCopied };
-};
+  return { isCopied, isAvailable, copy };
+}

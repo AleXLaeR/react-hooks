@@ -1,5 +1,5 @@
 import { RefObject, useEffect, useState } from 'react';
-import useDebounce from '../useDebounce';
+import useDebounce from './useDebounce';
 
 type UseElementOnScreenOptions = IntersectionObserverInit & {
   debounceIntervalMs?: number;
@@ -7,8 +7,8 @@ type UseElementOnScreenOptions = IntersectionObserverInit & {
 
 export default function useIntersection<El extends HTMLElement>(
   ref: RefObject<El>,
-  { rootMargin = '0px', debounceIntervalMs = 500, ...rest }: UseElementOnScreenOptions
-) {
+  {rootMargin = '0px', debounceIntervalMs = 500, ...rest }: UseElementOnScreenOptions,
+): boolean {
   const [isIntersecting, setIsIntersecting] = useState(true);
   const debouncedIsIntersecting = useDebounce(isIntersecting, debounceIntervalMs);
 

@@ -1,8 +1,8 @@
 import { RefObject, useCallback, useEffect, useRef } from 'react';
 
-export default function useClickOutside<Element extends HTMLElement = HTMLElement>(
-  elemRef: RefObject<Element>,
-  handler: (e: Event) => void
+export default function useClickOutside<El extends Element = Element>(
+  elemRef: RefObject<El>,
+  handler: (e: Event) => void,
 ) {
   const handlerRef = useRef(handler);
 

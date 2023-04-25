@@ -4,7 +4,7 @@ type SafeNumber = string | number;
 
 interface UseStorageInternalParams {
   key: string;
-  defValue?: SafeNumber | (() => SafeNumber);
+  defValue?: SafeNumber | ((key?: string) => SafeNumber);
   storage?: Storage;
 }
 
@@ -20,7 +20,7 @@ function useStorageInternal({
       return JSON.parse(jsonValue);
     }
 
-    return defValue instanceof Function ? defValue() : defValue;
+    return defValue instanceof Function ? defValue(key) : defValue;
   });
 
   useEffect(() => {

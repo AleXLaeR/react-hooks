@@ -24,7 +24,7 @@ export default function useScrollEffect(
     },
   ));
 
-  let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
+  let timeoutRef: ReturnType<typeof setTimeout> | null = null;
 
   const callback = useCallback(() => {
     const currentPos = getScrollPosition({
@@ -36,7 +36,7 @@ export default function useScrollEffect(
     effect({ previousPos: position.current, currentPos });
 
     position.current = currentPos;
-    throttleTimeout = null;
+    timeoutRef = null;
   }, [effect, element, boundingElement, useWindow]);
 
   useIsomorphicLayoutEffect(() => {
@@ -44,15 +44,15 @@ export default function useScrollEffect(
       return;
     }
 
-    const handleScroll = () => {
+    const handleScroll = useCallback(() => {
       if (throttleIntervalMs) {
-        if (throttleTimeout === null) {
-          throttleTimeout = setTimeout(callback, throttleIntervalMs);
+        if (timeoutRef === null) {
+          timeoutRef = setTimeout(callback, throttleIntervalMs);
         }
-      } else if (!throttleTimeout) {
+      } else if (!timeoutRef) {
         callback();
       }
-    };
+    }, [timeoutRef, throttleIntervalMs]);
 
     if (boundingElement) {
       boundingElement.current?.addEventListener('scroll', handleScroll, { passive: true });
@@ -67,8 +67,8 @@ export default function useScrollEffect(
         window.removeEventListener('scroll', handleScroll);
       }
 
-      if (throttleTimeout !== null) {
-        clearTimeout(throttleTimeout);
+      if (timeoutRef !== null) {
+        clearTimeout(timeoutRef);
       }
     };
   }, deps);

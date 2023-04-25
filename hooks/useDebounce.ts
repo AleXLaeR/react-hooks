@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+type Timeout = ReturnType<typeof setTimeout>;
 
 export default function useDebounce<T>(
   value: T,
-  intervalMs: number = 2e3,
+  intervalMs: number = 200,
   skip: boolean = false,
-) {
+): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef<Timeout>();
 
   useEffect(() => {
     if (skip) {
@@ -13,11 +16,16 @@ export default function useDebounce<T>(
       return;
     }
 
-    const timeout = setTimeout(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
       setDebouncedValue(value);
     }, intervalMs);
-    return () => clearTimeout(timeout);
-  }, [value, intervalMs]);
+
+    return () => clearTimeout(timeoutRef.current);
+  }, [value, intervalMs, skip]);
 
   return debouncedValue;
 }
