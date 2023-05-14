@@ -1,27 +1,35 @@
 import { RefObject, useCallback, useEffect, useRef } from 'react';
 
-export default function useClickOutside<El extends Element = Element>(
+export default function useClickOutside<El extends HTMLElement>(
   elemRef: RefObject<El>,
   handler: (e: Event) => void,
-) {
+  parentRef?: RefObject<El>,
+): void {
   const handlerRef = useRef(handler);
 
-  const listener = useCallback((event: Event) => {
-    const nodeTarget = event.target as Node;
-    if (!elemRef.current || elemRef.current.contains(nodeTarget)) {
-      return;
-    }
+  const listener = useCallback(
+    (event: Event) => {
+      const nodeTarget = event.target as Node;
 
-    handlerRef.current(event);
-  }, [elemRef]);
+      if (parentRef && !parentRef.current?.contains(nodeTarget)) {
+        return;
+      }
+      if (!elemRef.current || elemRef.current.contains(nodeTarget)) {
+        return;
+      }
+
+      handlerRef.current(event);
+    },
+    [parentRef, elemRef],
+  );
 
   useEffect(() => {
-   document.addEventListener('mousedown', listener);
-   document.addEventListener('touchstart', listener);
+    window.addEventListener('mouseup', listener);
+    window.addEventListener('touchstart', listener);
 
-   return () => {
-     document.removeEventListener('mousedown', listener);
-     document.removeEventListener('touchstart', listener);
-   };
-  }, [listener]);
+    return () => {
+      window.removeEventListener('mouseup', listener);
+      window.removeEventListener('touchstart', listener);
+    };
+  });
 }
