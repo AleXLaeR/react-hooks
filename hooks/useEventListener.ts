@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
 
-type BindingElement = Element | typeof window | typeof document;
 type EventType = keyof ElementEventMap | keyof WindowEventMap | keyof DocumentEventMap;
+
+type EventCallback<E extends Event = Event> = (e: E) => void;
+type EventBindingElement = HTMLElement | typeof window | typeof document;
 
 export default function useEventListener<E extends Event, EType extends EventType>(
   eventType: EType,
-  callback: (event: E) => void,
-  on: BindingElement = window,
+  callback: EventCallback<E>,
+  on: EventBindingElement = window,
 ) {
   const callbackRef = useRef(callback);
 
@@ -23,6 +25,4 @@ export default function useEventListener<E extends Event, EType extends EventTyp
 
     return () => on.removeEventListener(eventType, handler);
   }, [on, eventType]);
-
-  useEventListener('scroll', () => {});
 }
