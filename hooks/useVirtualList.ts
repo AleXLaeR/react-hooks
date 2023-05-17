@@ -1,4 +1,4 @@
-import { RefObject, useState, useEffect, useRef, useCallback } from 'react';
+import { RefObject, useEffect, useRef, useCallback, useMemo } from 'react';
 import useDebouncedState from './useDebouncedState';
 
 interface UseVirtualListOptions {
@@ -17,29 +17,23 @@ export default function useVirtualList<T>(
   initialList: NonNullable<T>[],
   { itemHeight, overScan = 5, debounceIntervalMs = 100 }: UseVirtualListOptions,
 ): UseVirtualListReturnType<T> {
-  const [visibleItems, setVisibleItems] = useState<NonNullable<T>[]>([]);
+  const containerRef = useRef<HTMLElement | null>(null);
   const [scrollTop, setScrollTop] = useDebouncedState(0, debounceIntervalMs);
 
-  const containerRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
+  const visibleItems: NonNullable<T>[] = useMemo(() => {
+    if (!containerRef.current) return [];
 
     const containerHeight = containerRef.current.clientHeight;
     const visibleCount = Math.ceil(containerHeight / itemHeight);
+    const startIdx = Math.floor(scrollTop / itemHeight);
+    const endIdx = startIdx + visibleCount + overScan * 2;
 
-    const startIdx = Math.max(0, Math.floor(scrollTop / itemHeight));
-    const endIdx = Math.min(initialList.length, startIdx + visibleCount + overScan * 2);
-
-    setVisibleItems(initialList.slice(startIdx, endIdx));
+    return initialList.slice(startIdx, Math.min(initialList.length, endIdx));
   }, [initialList, itemHeight, overScan, scrollTop]);
 
   const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
-
-    requestAnimationFrame(() => {
-      setScrollTop(containerRef.current!.scrollTop);
-    });
+    setScrollTop(containerRef.current.scrollTop);
   }, []);
 
   useEffect(() => {
@@ -47,10 +41,7 @@ export default function useVirtualList<T>(
     if (!container) return;
 
     container.addEventListener('scroll', handleScroll);
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-    };
+    return () => container.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
   const scrollTo = useCallback(
